@@ -1,6 +1,10 @@
-﻿namespace Model.Mapper {
+﻿using System;
+
+namespace Model.Mapper {
     public interface IModelMapper {
-        IObjectSetter<TTarget> Make<TTarget>() where TTarget : class, new();
-        IObjectSetter<T> Set<T>(T target) where T : class, new();
+        IObjectSetter Make(Type targetType);
+        IObjectSetter Make<TTarget>() where TTarget : class;
+        IObjectSetter Set(Type targetType, object? targetModel);
+        IObjectSetter Set<TTarget>(TTarget? target) where TTarget : class;
     }
 }
