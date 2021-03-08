@@ -1,3 +1,5 @@
 ﻿namespace Model.Mapper.Tests.Model {
-    internal record SomeRecord(int Property1) { }
+    internal record SomeRecord {
+        public int Property1 { get; init; }
+    }
 }
