@@ -2,25 +2,26 @@
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using static Model.Mapper.ObjectFactory;
 
 namespace Model.Mapper {
     internal static class ObjectMapper {
-        public static void Map(object source, object target) {
+        public static object Map(object source, object target) {
             var sourceType = source.GetType();
             var targetType = target.GetType();
-            _ = ExecuteMap(source, sourceType, target, targetType)!;
+            return ExecuteMap(source, sourceType, target, targetType)!;
         }
 
         private static object ExecuteMap(object source, Type sourceType, object? target, Type targetType) {
             if (source is ValueType) return source;
             if (source is string stringValue) return new string(stringValue);
-            if (source is IDictionary dictionary) return GetUpdatedDictionary(dictionary, sourceType, target, targetType);
+            if (source is IDictionary dictionary) return GetUpdatedDictionary(dictionary, target, targetType);
+            if (source is IEnumerable enumerable && targetType.IsArray) return CloneCollection(enumerable, sourceType, targetType);
             if (source is IEnumerable collection) return GetUpdatedCollection(collection, sourceType, target, targetType);
             return GetUpdateReferenceType(source, sourceType, target, targetType);
         }
 
-        private static object GetUpdatedDictionary(IDictionary dictionary, Type sourceType, object? targetValue, Type targetType) {
-            var sourceValueType = sourceType.GenericTypeArguments.ToArray()[1];
+        private static object GetUpdatedDictionary(IDictionary dictionary, object? targetValue, Type targetType) {
             var targetKeyType = targetType.GenericTypeArguments.ToArray()[0];
             var targetValueType = targetType.GenericTypeArguments.ToArray()[1];
             var getKeyMethod = typeof(DictionaryEntry).GetMethod("get_Key")!;
@@ -39,7 +40,7 @@ namespace Model.Mapper {
         }
 
         private static object CreateOrClearDictionary(object? dictionary, Type listType, Type keyType, Type valueType) {
-            if (dictionary == null) return ObjectFactory.CreateDictionary(keyType, valueType);
+            if (dictionary == null) return CreateDictionary(keyType, valueType);
             var clearMethod = listType.GetMethod("Clear")!;
             clearMethod.Invoke(dictionary, null);
             return dictionary;
@@ -47,7 +48,6 @@ namespace Model.Mapper {
 
         private static object GetUpdatedCollection(IEnumerable collection, Type sourceType, object? targetCollection, Type targetType) {
             var sourceItemType = sourceType.GetElementType() ?? sourceType.GenericTypeArguments.ToArray()[0];
-            if (targetType.IsArray) return ObjectFactory.CloneCollection(collection, sourceType, targetType);
             var targetItemType = targetType.GenericTypeArguments.ToArray()[0];
             var addMethod = targetType.GetMethod("Add")!;
 
@@ -60,7 +60,7 @@ namespace Model.Mapper {
         }
 
         private static object CreateOrClearCollection(object? collection, Type collectionType, Type itemType) {
-            if (collection == null) return ObjectFactory.CreateList(itemType);
+            if (collection == null) return CreateList(itemType);
             var clearMethod = collectionType.GetMethod("Clear")!;
             clearMethod.Invoke(collection, null);
             return collection;
