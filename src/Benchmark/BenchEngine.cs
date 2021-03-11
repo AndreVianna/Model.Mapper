@@ -14,16 +14,14 @@ namespace Benchmark {
         }
 
         public void Start() {
-            Console.WriteLine("Discarding first 100 operations...");
-            for (var i = 0; i < 100; i++) {
-                ModelMapper.Set(_target).From(_source);
-            }
+            Console.WriteLine("Discarding first operation...");
+            Map.From(_source).To(_target);
 
             Console.WriteLine("Starting profile of 1.000.000 operations...");
 
             var timer = Stopwatch.StartNew();
             for (var i = 0; i < 1000000; i++) {
-                ModelMapper.Set(_target).From(_source);
+                Map.From(_source).To(_target);
             }
             timer.Stop();
             
